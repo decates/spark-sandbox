@@ -19,4 +19,6 @@ project/plugins/project/
 # Vagrant
 /.vagrant/
 
+# Folder containing data (e.g. training)
 /data/
+/.idea/
