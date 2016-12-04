@@ -2,7 +2,7 @@
 echo Running as user: $USER
 
 set -e
-BASE_PATH=~
+BASE_PATH=$HOME
 SPARK_VERSION=2.0.2
 HADOOP_VERSION=2.7
 JDK_VERSION=8
@@ -12,6 +12,7 @@ SPARKLING_WATER_MINOR_VERSION=0
 
 SPARK_NAME=spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION
 SPARKLING_WATER_NAME=sparkling-water-$SPARKLING_WATER_MAJOR_VERSION.$SPARKLING_WATER_MINOR_VERSION
+SPARKLING_HOME=$HOME/$SPARKLING_WATER_NAME
 
 # Display environment variables
 export
@@ -69,8 +70,14 @@ echo "
 export JAVA_HOME=/usr/lib/jvm/java-$JDK_VERSION-openjdk-amd64
 export SBT_HOME=$BASE_PATH/sbt-$SBT_VERSION
 export SPARK_HOME=$BASE_PATH/$SPARK_NAME
-export PATH=$PATH:$JAVA_HOME/bin
-export PATH=$PATH:$SBT_HOME/bin:$SPARK_HOME/bin:$SPARK_HOME/sbin
 " >> ~/.bashrc
+
+echo Configure .profile
+echo "
+
+# Add Spark stuff to PATH
+PATH=\$PATH:$JAVA_HOME/bin
+PATH=\$PATH:$SBT_HOME/bin:$SPARK_HOME/bin:$SPARK_HOME/sbin:$SPARKLING_HOME/bin
+" >> ~/.profile
 
 echo Done.
