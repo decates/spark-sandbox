@@ -22,22 +22,22 @@ sudo apt-get update
 echo Download and unpack
 echo - Apache Spark
 wget -nv http://apache.mirrors.nublue.co.uk/spark/spark-$SPARK_VERSION/$SPARK_NAME.tgz
-tar xvzf $SPARK_NAME.tgz
+tar xzf $SPARK_NAME.tgz
 
 echo - SBT
 wget -nv https://dl.bintray.com/sbt/native-packages/sbt/$SBT_VERSION/sbt-$SBT_VERSION.tgz
-tar xvzf sbt-$SBT_VERSION.tgz
+tar xzf sbt-$SBT_VERSION.tgz
 
 echo - h2o Sparkling Water
 wget -nv http://h2o-release.s3.amazonaws.com/sparkling-water/rel-$SPARKLING_WATER_MAJOR_VERSION/$SPARKLING_WATER_MINOR_VERSION/$SPARKLING_WATER_NAME.zip
-apt-get -qy install unzip
-unzip $SPARKLING_WATER_NAME.zip
+sudo apt-get -qy install unzip
+unzip -q $SPARKLING_WATER_NAME.zip
 
 echo Install Java JDK
-apt-get -qy install openjdk-$JDK_VERSION-jdk-headless
+sudo apt-get -qy install openjdk-$JDK_VERSION-jdk-headless
 
 echo Configure SSH
-apt-get -qy install openssh-server
+sudo apt-get -qy install openssh-server
 cd ~
 ssh-keygen -t rsa -f /tmp/sshkey -q -N ""
 ssh-keygen -t rsa -P ""
