@@ -2,6 +2,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.udf
 
+
 val dataFilePath = "/home/vagrant/data/lse/LSE*.txt"
 val learningOffsets = Seq(-1, -2, -3, -5, -10, -30)
 val predictionOffset = 30
@@ -39,7 +40,6 @@ def addOffset(dataToAddTo: Dataset[Row], originalData: Dataset[Row], offset: Int
   val extraColumns = offsetDF.columns.filter(c => (c != "index" && c != "ticker")).foreach(c => {
     offsetDF = offsetDF.withColumnRenamed(c, c + offset.toString)
   })
-  // data("index") === offsetDF("index")
   dataToAddTo.join(offsetDF, List("index", "ticker"), "inner")
 }
 
@@ -81,5 +81,40 @@ val possibleResponses = (
 possibleResponses.show()
 
 // Align training data (X) and expected responses (Y) ready for passing to model
+// Because of offsets for past and future data, they cover different time-periods: find the intersection
+val allData = joinedData.join(possibleResponses, List("index", "ticker"), "inner").drop("index").drop("ticker")
+allData.cache()
 
-// Split on ticker into training, cross-validation and test sets (if h2o doesn't do it already?)
+// Train a Deep Learning model
+import org.apache.spark.SparkFiles
+import org.apache.spark.h2o._
+import org.apache.spark.examples.h2o._
+import org.apache.spark.sql.{DataFrame, SQLContext}
+import water.Key
+import water.support.SparkContextSupport.addFiles
+
+import org.apache.spark.h2o._
+val h2oContext = H2OContext.getOrCreate(sc)
+import h2oContext._
+import h2oContext.implicits._
+
+val trainFrame = h2oContext.asH2OFrame(allData, "training_table")
+
+import _root_.hex.deeplearning.DeepLearning
+import _root_.hex.deeplearning.DeepLearningModel.DeepLearningParameters
+val dlParams = new DeepLearningParameters()
+dlParams._epochs = 100
+dlParams._train = trainFrame
+dlParams._response_column = 'price_difference
+dlParams._variable_importances = true
+// Create a job
+val dl = new DeepLearning(dlParams, Key.make("dlModel.hex"))
+val dlModel = dl.trainModel.get
+
+val predictionH2OFrame = dlModel.score(allData)('predict)
+val predictionsFromModel = asRDD[DoubleHolder](predictionH2OFrame).collect.map(_.result.getOrElse(Double.NaN))
+
+val expected = allData.select("price_difference")
+val expectedValues = expected.take(20).map(r => r(0))
+val comp = (expectedValues zip predictionsFromModel)
+comp.map(i => (i._2-i._1)/i._1).map(math.abs).sum / comp.length
