@@ -15,8 +15,8 @@ Vagrant.configure("2") do |config|
   
   config.vm.provider "virtualbox" do |vb|
     vb.gui = false
-    vb.memory = "6144"
-	vb.cpus = 4
+    vb.memory = "6500"
+	vb.cpus = 5
   end
   
   config.vm.provision "shell", privileged: false, path: "setup/install-prerequisites.sh"
